@@ -1,0 +1,10 @@
+[Unit]
+Description=Global Player Daemon v3.2
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env python3 %h/globalplayer-daemon/gpd.py
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

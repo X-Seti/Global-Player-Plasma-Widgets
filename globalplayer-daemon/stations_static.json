@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Classic FM",
+    "url": "https://media-ssl.musicradio.com/ClassicFM"
+  },
+  {
+    "name": "Classic FM Relax",
+    "url": "https://media-ssl.musicradio.com/ClassicFMRelax"
+  },
+  {
+    "name": "Heart",
+    "url": "https://media-ssl.musicradio.com/HeartUK"
+  },
+  {
+    "name": "Heart London",
+    "url": "https://media-ssl.musicradio.com/HeartLondon"
+  },
+  {
+    "name": "Heart 60s",
+    "url": "https://media-ssl.musicradio.com/Heart60s"
+  },
+  {
+    "name": "Heart 70s",
+    "url": "https://media-ssl.musicradio.com/Heart70s"
+  },
+  {
+    "name": "Heart 80s",
+    "url": "https://media-ssl.musicradio.com/Heart80s"
+  },
+  {
+    "name": "Heart 90s",
+    "url": "https://media-ssl.musicradio.com/Heart90s"
+  },
+  {
+    "name": "Heart 00s",
+    "url": "https://media-ssl.musicradio.com/Heart00s"
+  },
+  {
+    "name": "Heart Dance",
+    "url": "https://media-ssl.musicradio.com/HeartDance"
+  },
+  {
+    "name": "Heart Xmas",
+    "url": "https://media-ssl.musicradio.com/HeartXmas"
+  },
+  {
+    "name": "Capital",
+    "url": "https://media-ssl.musicradio.com/CapitalUK"
+  },
+  {
+    "name": "Capital London",
+    "url": "https://media-ssl.musicradio.com/CapitalLondon"
+  },
+  {
+    "name": "Capital Dance",
+    "url": "https://media-ssl.musicradio.com/CapitalDance"
+  },
+  {
+    "name": "Capital XTRA",
+    "url": "https://media-ssl.musicradio.com/CapitalXTRA"
+  },
+  {
+    "name": "Capital XTRA Reloaded",
+    "url": "https://media-ssl.musicradio.com/CapitalXTRA-Reloaded"
+  },
+  {
+    "name": "LBC",
+    "url": "https://media-ssl.musicradio.com/LBCUK"
+  },
+  {
+    "name": "LBC News",
+    "url": "https://media-ssl.musicradio.com/LBCNewsUK"
+  },
+  {
+    "name": "Smooth",
+    "url": "https://media-ssl.musicradio.com/SmoothUK"
+  },
+  {
+    "name": "Smooth London",
+    "url": "https://media-ssl.musicradio.com/SmoothLondon"
+  },
+  {
+    "name": "Smooth Chill",
+    "url": "https://media-ssl.musicradio.com/SmoothChill"
+  },
+  {
+    "name": "Smooth Country",
+    "url": "https://media-ssl.musicradio.com/SmoothCountry"
+  },
+  {
+    "name": "Radio X",
+    "url": "https://media-ssl.musicradio.com/RadioXUK"
+  },
+  {
+    "name": "Radio X Classic Rock",
+    "url": "https://media-ssl.musicradio.com/RadioXClassicRock"
+  },
+  {
+    "name": "Gold",
+    "url": "https://media-ssl.musicradio.com/Gold"
+  }
+]
