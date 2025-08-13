@@ -119,7 +119,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             PC3.Label {
-                text: "Global Player v3.2"
+                text: "Global Player v1.0"
                 font.bold: true
                 Layout.fillWidth: true
             }

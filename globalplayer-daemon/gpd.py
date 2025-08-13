@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#X-Seti - Aug12 2025 - GlobalPlayer
+#X-Seti (Mooheda)- Aug12 2025 - GlobalPlayer
 import os, json, time, re, hashlib, pathlib, threading, subprocess, tempfile
 import dbus
 import dbus.service
