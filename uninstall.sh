@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# X-Seti (Mooheda) Aug14 2025 - Global Player
 set -euo pipefail
 
 PLASMOID_ID="org.mooheda.globalplayer"
@@ -28,4 +29,4 @@ elif command -v kquitapp5 >/dev/null 2>&1; then
   (sleep 1; kstart5 plasmashell)&
 fi
 
-echo "[✓] Global Player v3.2 fully removed."
+echo "[✓] Global Player v1.0 fully removed."

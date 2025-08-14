@@ -1,4 +1,4 @@
-// X-Seti (Mooheda) Aug14 2025 - Global Player
+// X-Seti - Aug12 2025 - GlobalPlayer
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
@@ -21,7 +21,6 @@ Item {
     property string playState: "Stopped"
     property bool loggingEnabled: false
     property url artworkUrl: ""
-    property string lastNotifiedTrack: ""
 
     // Poll metadata every 10s
     Timer {
@@ -48,13 +47,6 @@ Item {
                     playState = m.state || playState
                     if (m.artworkPath) {
                         artworkUrl = "file://" + m.artworkPath
-                    }
-                    
-                    // Send notification for new tracks
-                    var currentTrack = nowArtist + " — " + nowTitle
-                    if (currentTrack.trim() !== " — " && currentTrack !== lastNotifiedTrack && playState === "Playing") {
-                        lastNotifiedTrack = currentTrack
-                        sendNotification(currentTrack)
                     }
                 } catch (e) {}
             } else if (sourceName.indexOf("GetState") !== -1) {
@@ -86,11 +78,6 @@ Item {
                 cmd += " \"" + a + "\""
             }
         }
-        execDS.connectSource(cmd)
-    }
-
-    function sendNotification(trackInfo) {
-        var cmd = "notify-send \"Global Player\" \"" + trackInfo.replace(/\"/g, "\\\"") + "\" --icon=audio-headphones"
         execDS.connectSource(cmd)
     }
 
@@ -209,71 +196,29 @@ Item {
         }
     }
 
-    // Compact panel UI - Cover art + controls only
+    // Compact panel UI
     Plasmoid.compactRepresentation: Item {
-        width: PlasmaCore.Units.gridUnit * 8
-        height: PlasmaCore.Units.gridUnit * 2
+        width: PlasmaCore.Units.gridUnit * 12
+        height: PlasmaCore.Units.gridUnit * 2.2
 
         Row {
             anchors.fill: parent
-            spacing: 4
+            spacing: 6
 
-            // Cover art
             Rectangle {
-                width: parent.height
-                height: parent.height
-                radius: 4
-                border.color: "#444"
-                color: "#00000000"
-                
-                Image {
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    fillMode: Image.PreserveAspectFit
-                    source: artworkUrl
-                    visible: artworkUrl !== ""
-                }
-                
-                PC3.Label {
-                    anchors.centerIn: parent
-                    text: "♪"
-                    opacity: 0.6
-                    visible: artworkUrl === ""
-                }
+                width: parent.height; height: parent.height; radius: 6
+                border.color: "#444"; color: "#00000000"
+                Image { anchors.fill: parent; anchors.margins: 2; fillMode: Image.PreserveAspectFit; source: artworkUrl }
             }
 
-            // Control buttons
-            Row {
-                spacing: 2
-                anchors.verticalCenter: parent.verticalCenter
-                
-                PC3.ToolButton {
-                    text: "◀"
-                    onClicked: prevStation()
-                    ToolTip.text: "Previous station"
-                }
-                
-                PC3.ToolButton {
-                    text: playState === "Playing" ? "⏸" : "▶"
-                    onClicked: playState === "Playing" ? qdbusCall("Pause", []) : playCurrent()
-                    ToolTip.text: playState === "Playing" ? "Pause" : "Play"
-                }
-                
-                PC3.ToolButton {
-                    text: "▶"
-                    onClicked: nextStation()
-                    ToolTip.text: "Next station"
-                }
-                
-                PC3.ToolButton {
-                    text: "⏹"
-                    onClicked: { qdbusCall("Pause", []); playState = "Stopped" }
-                    ToolTip.text: "Stop"
-                }
+            PC3.ToolButton {
+                id: iconBtn
+                text: stationsModel.length > 0 ? stationsModel[stationIndex] : "Global"
+                onClicked: stationMenu.open()
             }
         }
 
-        // Wheel scrolling for station switching
+        // Wheel scrolling (Qt 5/6 compatible)
         WheelHandler {
             target: this
             onWheel: {
@@ -282,15 +227,8 @@ Item {
             }
         }
 
-        // Right-click context menu
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.RightButton
-            onClicked: if (mouse.button === Qt.RightButton) contextMenu.open()
-        }
-
         Menu {
-            id: contextMenu
+            id: stationMenu
             Repeater {
                 model: stationsModel
                 delegate: MenuItem {
