@@ -8,4 +8,4 @@
 
  Right Click, Add Widget, Search for Global Player.
 
- Enjpy
+ Enjoy
