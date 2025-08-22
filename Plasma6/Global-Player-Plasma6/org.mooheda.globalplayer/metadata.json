@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "",
+                "Name": "X-Seti (Mooheda)"
+            }
+        ],
+        "Category": "Multimedia",
+        "Description": "Listen to Global Player stations (dynamic + static list)",
+        "Icon": "audio-headphones",
+        "Id": "org.mooheda.globalplayer",
+        "Name": "Global Player",
+        "Version": "3.2",
+        "Website": "",
+        "BugReportUrl": ""
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "Plasma/Applet"
+}
