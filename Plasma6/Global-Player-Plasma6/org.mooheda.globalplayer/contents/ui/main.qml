@@ -1,4 +1,4 @@
-// X-Seti - Aug12 2025 - GlobalPlayer - Plasma 6 Only
+// X-Seti - Aug12 2025 - GlobalPlayer - Plasma 6 Only with Notifications & Dynamic Icon
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
@@ -6,11 +6,11 @@ import org.kde.plasma.components 3.0 as PC3
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.plasma5support 2.0 as P5Support
 import org.kde.kirigami 2.20 as Kirigami
+import org.kde.notification 1.0
 
 PlasmoidItem {
     id: root
 
-    // Ensure we have valid fallback values
     property var stationsModel: []
     property int stationIndex: 0
     property string selectedStation: stationsModel.length > 0 ? stationsModel[stationIndex] : ""
@@ -20,13 +20,36 @@ PlasmoidItem {
     property string playState: "Stopped"
     property bool loggingEnabled: false
     property url artworkUrl: ""
-
-    // Preferred sizes for better layout
-    Layout.preferredWidth: Kirigami.Units.gridUnit * 20
-    Layout.preferredHeight: Kirigami.Units.gridUnit * 15
     
-    // Panel size preferences
-    Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
+    // Track change detection for notifications
+    property string lastTrackId: ""
+    property bool notificationsEnabled: true
+
+    // Dynamic icon - use artwork if available, fallback to default
+    Plasmoid.icon: {
+        if (artworkUrl.toString() !== "" && playState === "Playing") {
+            return artworkUrl.toString()
+        } else {
+            return "audio-headphones"
+        }
+    }
+
+    // Tooltip with current playing info
+    toolTipMainText: {
+        if (playState === "Playing" && (nowArtist || nowTitle)) {
+            return nowArtist && nowTitle ? (nowArtist + " — " + nowTitle) : (nowTitle || nowArtist)
+        } else {
+            return "Global Player"
+        }
+    }
+    
+    toolTipSubText: {
+        if (playState === "Playing" && selectedStation) {
+            return "Playing on " + selectedStation
+        } else {
+            return playState
+        }
+    }
 
     // Poll metadata every 10s
     Timer {
@@ -39,6 +62,19 @@ PlasmoidItem {
         }
     }
 
+    // Notification component
+    Notification {
+        id: trackNotification
+        componentName: "globalplayer"
+        eventId: "trackChanged"
+        title: "Global Player"
+        iconName: "audio-headphones"
+        flags: Notification.CloseOnTimeout
+        
+        property bool ready: false
+        Component.onCompleted: ready = true
+    }
+
     P5Support.DataSource {
         id: execDS
         engine: "executable"
@@ -47,13 +83,36 @@ PlasmoidItem {
             if (sourceName.indexOf("GetNowPlaying") !== -1) {
                 try {
                     var m = JSON.parse(out)
-                    nowArtist = m.artist || ""
-                    nowTitle  = m.title || ""
-                    nowShow   = m.show || ""
-                    playState = m.state || playState
-                    if (m.artworkPath) {
-                        artworkUrl = "file://" + m.artworkPath
+                    var newArtist = m.artist || ""
+                    var newTitle = m.title || ""
+                    var newShow = m.show || ""
+                    var newState = m.state || playState
+                    var newArtworkPath = m.artworkPath || ""
+                    
+                    // Check if track changed for notification
+                    var newTrackId = newArtist + "|" + newTitle
+                    var trackChanged = (newTrackId !== lastTrackId) && newTrackId !== "|" && newState === "Playing"
+                    
+                    // Update properties
+                    nowArtist = newArtist
+                    nowTitle = newTitle
+                    nowShow = newShow
+                    playState = newState
+                    
+                    if (newArtworkPath) {
+                        artworkUrl = "file://" + newArtworkPath
+                    } else {
+                        artworkUrl = ""
                     }
+                    
+                    // Show notification for track changes
+                    if (trackChanged && notificationsEnabled && trackNotification.ready) {
+                        showTrackNotification(newArtist, newTitle, selectedStation)
+                        lastTrackId = newTrackId
+                    } else if (!trackChanged && newTrackId !== "|") {
+                        lastTrackId = newTrackId
+                    }
+                    
                 } catch (e) {
                     console.log("Error parsing GetNowPlaying:", e)
                 }
@@ -101,6 +160,33 @@ PlasmoidItem {
     function getState()      { qdbusCall("GetState", []) }
     function refreshStations(){ qdbusCall("GetStations", []) }
     function signIn()        { qdbusCall("SignIn", []) }
+
+    function showTrackNotification(artist, title, station) {
+        if (!trackNotification.ready) return
+        
+        var notificationText = ""
+        if (artist && title) {
+            notificationText = artist + " — " + title
+        } else if (title) {
+            notificationText = title
+        } else {
+            return // Don't show notification if no meaningful info
+        }
+        
+        trackNotification.text = notificationText
+        if (station) {
+            trackNotification.text += "\nOn " + station
+        }
+        
+        // Use artwork as notification icon if available
+        if (artworkUrl.toString() !== "") {
+            trackNotification.iconName = artworkUrl.toString()
+        } else {
+            trackNotification.iconName = "audio-headphones"
+        }
+        
+        trackNotification.sendEvent()
+    }
 
     function playCurrent() {
         if (stationsModel.length === 0) return
@@ -167,10 +253,9 @@ PlasmoidItem {
                     source: artworkUrl
                     visible: artworkUrl.toString() !== ""
                     
-                    onStatusChanged: {
-                        if (status === Image.Error) {
-                            console.log("Error loading artwork:", artworkUrl)
-                        }
+                    // Add subtle animation when artwork changes
+                    Behavior on opacity {
+                        NumberAnimation { duration: 300 }
                     }
                 }
                 
@@ -179,6 +264,25 @@ PlasmoidItem {
                     text: artworkUrl.toString() === "" ? "♪" : ""
                     opacity: 0.6
                     font.pointSize: Math.max(16, Kirigami.Theme.defaultFont.pointSize * 1.5)
+                }
+                
+                // Playing indicator
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 2
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: playState === "Playing" ? Kirigami.Theme.positiveTextColor : "transparent"
+                    visible: playState === "Playing"
+                    
+                    SequentialAnimation on opacity {
+                        running: playState === "Playing"
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.3; duration: 800 }
+                        NumberAnimation { to: 1.0; duration: 800 }
+                    }
                 }
             }
             
@@ -221,15 +325,6 @@ PlasmoidItem {
                 if (index >= 0 && index < stationsModel.length) {
                     stationIndex = index
                     playCurrent()
-                }
-            }
-            
-            // Ensure the ComboBox shows something even when model is empty
-            displayText: {
-                if (stationsModel.length > 0 && currentIndex >= 0 && currentIndex < stationsModel.length) {
-                    return stationsModel[currentIndex]
-                } else {
-                    return "No stations available"
                 }
             }
         }
@@ -278,6 +373,13 @@ PlasmoidItem {
                 onToggled: qdbusCall("SetLogging", [checked ? "true" : "false"])
             }
             
+            PC3.CheckBox {
+                id: notifyToggle
+                text: "Show notifications"
+                checked: notificationsEnabled
+                onToggled: notificationsEnabled = checked
+            }
+            
             PC3.Button { 
                 text: "↻"
                 onClicked: refreshStations()
@@ -288,15 +390,12 @@ PlasmoidItem {
 
     // Compact panel representation
     compactRepresentation: Item {
-        Layout.preferredWidth: Kirigami.Units.gridUnit * 8
-        Layout.preferredHeight: Kirigami.Units.gridUnit * 2
-
         MouseArea {
             id: compactMouseArea
             anchors.fill: parent
             onClicked: root.expanded = !root.expanded
             
-            // Mouse wheel support for changing stations
+            // Mouse wheel support
             onWheel: function(wheel) {
                 if (wheel.angleDelta.y > 0) {
                     prevStation()
@@ -326,12 +425,35 @@ PlasmoidItem {
                         fillMode: Image.PreserveAspectFit
                         source: artworkUrl
                         visible: artworkUrl.toString() !== ""
+                        
+                        Behavior on opacity {
+                            NumberAnimation { duration: 300 }
+                        }
                     }
                     
                     PC3.Label {
                         anchors.centerIn: parent
                         text: artworkUrl.toString() === "" ? "♪" : ""
                         opacity: 0.6
+                    }
+                    
+                    // Playing indicator for compact mode
+                    Rectangle {
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.margins: 1
+                        width: 4
+                        height: 4
+                        radius: 2
+                        color: playState === "Playing" ? Kirigami.Theme.positiveTextColor : "transparent"
+                        visible: playState === "Playing"
+                        
+                        SequentialAnimation on opacity {
+                            running: playState === "Playing"
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.3; duration: 800 }
+                            NumberAnimation { to: 1.0; duration: 800 }
+                        }
                     }
                 }
 
@@ -384,6 +506,11 @@ PlasmoidItem {
                 enabled: playState === "Playing"
                 onTriggered: qdbusCall("Pause", []) 
             }
+            PC3.MenuSeparator {}
+            PC3.MenuItem { 
+                text: notificationsEnabled ? "Disable Notifications" : "Enable Notifications"
+                onTriggered: notificationsEnabled = !notificationsEnabled
+            }
             PC3.MenuItem { 
                 text: loggingEnabled ? "Disable Logging" : "Enable Logging"
                 onTriggered: qdbusCall("SetLogging", [(!loggingEnabled).toString()]) 
@@ -402,9 +529,7 @@ PlasmoidItem {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton
-            onClicked: function(mouse) {
-                stationMenu.popup()
-            }
+            onClicked: stationMenu.open()
         }
     }
 }
