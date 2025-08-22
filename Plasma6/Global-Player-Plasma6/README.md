@@ -1,4 +1,4 @@
-# Global Player Plasma 6 Widget
+# Global Player Plasma 6 Widget - X-Seti
 
 A KDE Plasma 6 widget for listening to Global Player radio stations.
 
